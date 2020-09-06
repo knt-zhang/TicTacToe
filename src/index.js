@@ -6,23 +6,23 @@ import * as serviceWorker from './serviceWorker';
 
 // In JavaScript classes, you need to always call super when defining the constructor of a subclass.
 // All React component classes that have a constructor should start with a super(props) call.
+// function() could be replaced with ()=>, ex. onClick = {()=> {alert('click')}}
 class Square extends React.Component {
   render() {
     return (
-      <button className="square" onClick = {() => this.props.onClick}>
+      <button className="square" onClick = {() => this.props.onClick()}>
         {this.props.value}
       </button>
     );
   }
 }
-// function() could be replaced with ()=>, onClick = {()=> {alert('click')}}
 
 class Board extends React.Component {
   constructor(props){
     super(props);
     this.state = {
       squares: Array(9).fill(null)
-    }
+    };
   }
 
   handleClick(i){
@@ -31,9 +31,10 @@ class Board extends React.Component {
     this.setState({squares: squares});
   }
   renderSquare(i) {
-    return <Square value ={this.state.squares[i]}
-    onClick = {() => this.handleClick(i)}
-    />;
+    return (<Square value ={this.state.squares[i]}
+      onClick = {() => this.handleClick(i)}
+      />
+    );
   }
 
   render() {
