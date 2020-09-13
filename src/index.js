@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
+// import App from './App';
 import * as serviceWorker from './serviceWorker';
 
 // In JavaScript classes, you need to always call super when defining the constructor of a subclass.
@@ -26,50 +26,18 @@ function Square(props){
 }
 
 class Board extends React.Component {
-  constructor(props){
-    super(props);
-    this.state = {
-      squares: Array(9).fill(null),
-      xIsNext: true,
-    };
-  }
-
-  handleClick(i){
-    const squares = this.state.squares.slice();
-
-    // if winner is decided or board is filled, stop filling
-    if (calculateWinner(squares) || squares[i]){
-      return;
-    }
-
-    // switches between X and O
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
-    // if not X, then O; vice-versa
-    this.setState({
-      squares: squares,
-      xIsNext: !this.state.xIsNext
-    });
-  }
+  
   renderSquare(i) {
     return (<Square 
-      value = {this.state.squares[i]}
-      onClick = {() => this.handleClick(i)}
+      value = {this.props.squares[i]}
+      onClick = {() => this.props.onClick(i)}
       />
     );
   }
 
   render() {
-    const winner = calculateWinner(this.state.squares);
-    let status;
-    if (winner) {
-      status = 'Winner: ' + winner;
-    } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-    }
-
     return (
       <div>
-        <div className="status">{status}</div>
         <div className="board-row">
           {this.renderSquare(0)}
           {this.renderSquare(1)}
@@ -91,20 +59,87 @@ class Board extends React.Component {
 }
 
 class Game extends React.Component {
+  // keeping track of moves
+  // moved from class Board
+  constructor(props){
+    super(props);
+    this.state = {
+      history: [{
+        squares: Array(9).fill(null),
+      }],
+      stepNumber: 0,
+      xIsNext: true,
+    };
+  }
+  
+  handleClick(i){
+    // slice back into previous moves and if new move, throw out future history
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
+    const current = history[history.length - 1];
+    const squares = current.squares.slice();
+
+    // if winner is decided or board is filled, stop filling
+    if (calculateWinner(squares) || squares[i]){
+      return;
+    }
+
+    // switches between X and O
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    // if not X, then O; vice-versa
+    this.setState({
+      history: history.concat([{ squares: squares }]),
+      stepNumber: history.length,
+      xIsNext: !this.state.xIsNext
+    });
+  }
+  
+  jumpTo(step){
+    this.setState({
+      stepNumber: step,
+      xIsNext: (step % 2) === 0,
+    })
+  }
+
   render() {
+    // moved from Board's render
+    const history = this.state.history;
+    const current = history[this.state.stepNumber];
+    const winner = calculateWinner(current.squares);
+
+    const moves = history.map((step, move) =>{
+      const desc = move ? 'Go to move #' + move: 'Go to game start';
+      return(
+        <li key = { move }>
+          <button onClick = {() => this.jumpTo(move)}>{ desc }</button>
+        </li>
+      )
+    })
+
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+
     return (
       <div className="game">
         <div className="game-board">
-          <Board />
+          <Board
+            squares = {current.squares}
+            onClick = {(i) => this.handleClick(i)}
+          />
         </div>
         <div className="game-info">
-          <div>{/* status */}</div>
-          <ol>{/* TODO */}</ol>
+          <div>{ status }</div>
+          <ol>{ moves }</ol>
         </div>
       </div>
     );
   }
 }
+
+
 
 // ========================================
 
